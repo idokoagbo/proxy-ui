@@ -918,28 +918,22 @@
   </footer>
 
   <!-- ElevenLabs: load embed script, call public API on the element — no widget UI shown -->
-  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" type="text/javascript"></script>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" type="text/javascript" async></script>
 
-  <style>
-    /* Hide widget UI but keep it mountable (needs real dimensions to init) */
-    elevenlabs-convai {
-      position: fixed !important;
-      left: -9999px !important;
-      top: -9999px !important;
-      width: 1px !important;
-      height: 1px !important;
-      overflow: hidden !important;
-      pointer-events: none !important;
-    }
-  </style>
 
-  <!-- Widget element in DOM but invisible — gives us access to its public API -->
-  <elevenlabs-convai id="el-agent" agent-id="agent_8401kk2gz0aje26rcf9p1msrg3vg"></elevenlabs-convai>
+
+
+  <!-- Widget element: hidden off-screen but needs real dimensions to init -->
+  <elevenlabs-convai
+    id="el-widget"
+    agent-id="agent_8401kk2gz0aje26rcf9p1msrg3vg"
+    style="position:fixed;left:-9999px;top:-9999px;width:320px;height:200px;overflow:hidden;pointer-events:none;"
+  ></elevenlabs-convai>
 
   <script>
-    const AGENT_ID = 'agent_8401kk2gz0aje26rcf9p1msrg3vg';
+    // Approach: widget has open shadow DOM — we click its internal button
+    // This avoids needing the SDK's livekit-client peer dependency
     let isActive = false;
-    let widget = null;
 
     function updateButtons(label, active, disabled) {
       document.querySelectorAll('.btn-talk').forEach(function(btn) {
@@ -951,39 +945,60 @@
       });
     }
 
-    async function startAgent() {
-      widget = widget || document.getElementById('el-agent');
+    function getWidgetButton() {
+      var widget = document.getElementById('el-widget');
+      if (!widget || !widget.shadowRoot) return null;
+      // ElevenLabs widget renders a <button> inside shadow DOM
+      return widget.shadowRoot.querySelector('button');
+    }
 
+    async function startAgent() {
       if (isActive) {
         isActive = false;
         updateButtons('Talk to a Certin Agent', false, false);
-        try { await widget.endSession(); } catch(e) { console.warn('endSession:', e); }
+        var btn = getWidgetButton();
+        if (btn) btn.click();
         return;
       }
 
       isActive = true;
       updateButtons('Connecting...', false, true);
 
-      try {
-        await customElements.whenDefined('elevenlabs-convai');
-        await new Promise(function(r) { setTimeout(r, 150); });
-        await widget.startSession({ agentId: AGENT_ID });
-        updateButtons('End call', true, false);
-      } catch(err) {
-        console.error('startSession error:', err);
-        isActive = false;
-        updateButtons('Talk to a Certin Agent', false, false);
-        alert('Microphone access is required. Please allow it and try again.');
-      }
+      // Wait for widget shadow DOM to be ready
+      var attempts = 0;
+      var tryClick = function() {
+        var btn = getWidgetButton();
+        if (btn) {
+          btn.click();
+          updateButtons('End call', true, false);
+        } else if (attempts < 30) {
+          attempts++;
+          setTimeout(tryClick, 200);
+        } else {
+          // Widget never mounted — fall back to direct SDK
+          isActive = false;
+          updateButtons('Talk to a Certin Agent', false, false);
+          alert('Voice agent unavailable. Please refresh and try again.');
+        }
+      };
+
+      tryClick();
     }
 
+    // Listen for widget disconnect via its events
     document.addEventListener('DOMContentLoaded', function() {
-      widget = document.getElementById('el-agent');
+      var widget = document.getElementById('el-widget');
 
-      widget.addEventListener('elevenlabs-convai:call-ended', function() {
-        isActive = false;
-        updateButtons('Talk to a Certin Agent', false, false);
-      });
+      if (widget) {
+        widget.addEventListener('elevenlabs-convai:call-ended', function() {
+          isActive = false;
+          updateButtons('Talk to a Certin Agent', false, false);
+        });
+        widget.addEventListener('elevenlabs-convai:disconnect', function() {
+          isActive = false;
+          updateButtons('Talk to a Certin Agent', false, false);
+        });
+      }
 
       document.querySelectorAll('.btn-talk').forEach(function(btn) {
         btn.addEventListener('click', startAgent);
