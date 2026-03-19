@@ -1,521 +1,1048 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Certin Voice Widget — Plain HTML Version</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proxy — Your brand's voice. On every website. Always on.</title>
+  <meta name="description" content="Proxy deploys a conversational AI agent on your website — trained on your product, speaking your language, converting visitors 24/7.">
+  <meta property="og:title" content="Proxy — Your brand's voice. On every website.">
+  <meta property="og:description" content="Deploy a voice AI agent trained on your product. Convert visitors 24/7.">
+  <meta property="og:url" content="https://proxy.ai">
+  <meta property="og:type" content="website">
 
-  <!-- ElevenLabs SDK — loaded async, non-blocking -->
-  <script async src="https://unpkg.com/@11labs/client/dist/umd/index.js"
-    onload="window.__elevenLabsReady = true"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 
   <style>
-    /* ─── Reset ─────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ─── Demo page scaffold (remove in production) ──────────── */
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #f2f0ee;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #07312a;
-    }
-    .demo-label {
-      font-size: 13px;
-      color: #07312a99;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    /* ─── Certin Brand Variables ──────────────────────────────── */
+    /* ─── Design Tokens ─── */
     :root {
-      --certin-dark:    #07312A;
-      --certin-green:   #00E47C;
-      --certin-white:   #FFFFFF;
-      --certin-offwhite:#F2F0EE;
-      --certin-black:   #000000;
+      --bg:           #FAFAF9;
+      --bg-section:   #F3F0EB;
+      --bg-dark:      #0F0E0C;
+      --text:         #111110;
+      --text-muted:   #6B6860;
+      --accent:       #0B4F3A;
+      --accent-mid:   #1A6B52;
+      --accent-light: #E6F2EE;
+      --border:       #E2DED8;
+      --white:        #FFFFFF;
+      --font-display: 'Syne', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+      --radius:       6px;
+      --radius-lg:    14px;
     }
 
-    /* ─────────────────────────────────────────────────────────
-       FLOATING VOICE BUTTON
-    ───────────────────────────────────────────────────────── */
-    #certin-voice-btn {
-      position: fixed;
-      bottom: 32px;
-      right: 32px;
-      z-index: 9999;
-      width: 64px;
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       height: 64px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: none;
-      outline: none;
-      background: var(--certin-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow:
-        0 0 0 0 rgba(0, 228, 124, 0),
-        0 8px 32px rgba(0, 0, 0, 0.25);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      background: rgba(250,250,249,0.90);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 32px;
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-weight: 700; font-size: 1.25rem;
+      letter-spacing: -0.02em; color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 36px; }
+    .nav-links a {
+      font-size: 0.875rem; color: var(--text-muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--text); color: var(--white);
+      padding: 8px 20px; border-radius: var(--radius);
+      font-size: 0.875rem; font-weight: 500;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: var(--accent); transform: translateY(-1px); }
+
+    /* ─── Container ─── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+    /* ─── Buttons ─── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--text); color: var(--white);
+      padding: 13px 26px; border-radius: var(--radius);
+      font-size: 0.9375rem; font-weight: 500; font-family: var(--font-body);
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      border: none; cursor: pointer;
+    }
+    .btn-primary:hover {
+      background: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(11,79,58,0.25);
+    }
+    .btn-ghost-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--text-muted); font-size: 0.9375rem;
+      transition: color 0.2s, gap 0.2s;
+    }
+    .btn-ghost-link:hover { color: var(--text); gap: 10px; }
+    .btn-outline {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1.5px solid var(--border); color: var(--text);
+      padding: 12px 26px; border-radius: var(--radius);
+      font-size: 0.9375rem; font-weight: 500; font-family: var(--font-body);
+      background: transparent; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.15s;
+    }
+    .btn-outline:hover {
+      border-color: var(--text); background: var(--text);
+      color: var(--white); transform: translateY(-1px);
     }
 
-    #certin-voice-btn:hover {
-      transform: scale(1.08);
-      box-shadow:
-        0 0 0 4px rgba(0, 228, 124, 0.25),
-        0 8px 32px rgba(0, 0, 0, 0.3);
+    /* ─── Section Label ─── */
+    .section-label {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 20px;
+    }
+    .section-label::before {
+      content: ''; display: block;
+      width: 18px; height: 1.5px; background: var(--accent);
     }
 
-    /* Active / listening state */
-    #certin-voice-btn.active {
-      animation: certin-pulse 2s ease-in-out infinite;
+    /* ─── HERO ─── */
+    .hero { padding: 128px 0 88px; overflow: hidden; }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 72px; align-items: center;
+    }
+    .hero-headline {
+      font-family: var(--font-display);
+      font-size: clamp(2.75rem, 4.5vw, 4rem);
+      font-weight: 700; line-height: 1.07;
+      letter-spacing: -0.035em; margin-bottom: 24px;
+    }
+    .hero-headline em {
+      font-style: italic; font-weight: 400; color: var(--accent);
+    }
+    .hero-sub {
+      font-size: 1.0625rem; line-height: 1.7;
+      color: var(--text-muted); max-width: 420px; margin-bottom: 36px;
+    }
+    .hero-actions { display: flex; align-items: center; gap: 28px; margin-bottom: 40px; }
+    .hero-proof {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 0.8125rem; color: var(--text-muted);
+      padding-top: 24px; border-top: 1px solid var(--border);
+    }
+    .proof-pips { display: flex; gap: 4px; }
+    .proof-pip {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+    }
+    .proof-pip.on { background: var(--accent); }
+
+    /* Hero Browser Mock */
+    .hero-visual { position: relative; }
+    .browser {
+      background: var(--white);
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 32px 72px rgba(0,0,0,0.09), 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .browser-bar {
+      background: var(--bg-section); padding: 12px 16px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .b-dots { display: flex; gap: 6px; }
+    .b-dot {
+      width: 10px; height: 10px; border-radius: 50%; background: var(--border);
+    }
+    .b-url {
+      flex: 1; background: var(--bg); border-radius: 4px;
+      padding: 4px 12px; font-size: 0.6875rem; color: var(--text-muted);
+      font-family: monospace;
+    }
+    .browser-body { padding: 28px 28px 24px; position: relative; min-height: 300px; }
+    .sk { background: var(--bg-section); border-radius: 3px; }
+    .sk-h { height: 9px; margin-bottom: 14px; }
+    .sk-l { height: 6px; margin-bottom: 9px; }
+    .sk-w90 { width: 90%; }
+    .sk-w70 { width: 70%; }
+    .sk-w50 { width: 50%; }
+    .sk-w35 { width: 35%; }
+    .sk-btns { display: flex; gap: 8px; margin-top: 20px; }
+    .sk-btn { height: 30px; border-radius: 4px; background: var(--text); }
+    .sk-btn.alt { background: var(--bg-section); }
+
+    /* Pulsing Voice Widget */
+    .voice-widget {
+      position: absolute; bottom: 24px; right: 24px; width: 52px; height: 52px;
+    }
+    .vw-pulse {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: var(--accent); opacity: 0;
+      animation: vwpulse 2.8s ease-out infinite;
+    }
+    .vw-pulse:nth-child(2) { animation-delay: 0.9s; }
+    .vw-btn {
+      position: relative; z-index: 2;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(11,79,58,0.4);
+    }
+    .vw-btn svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @keyframes vwpulse {
+      0%   { transform: scale(1); opacity: 0.45; }
+      100% { transform: scale(2.3); opacity: 0; }
     }
 
-    @keyframes certin-pulse {
-      0%   { box-shadow: 0 0 0 0   rgba(0,228,124, 0.6), 0 8px 32px rgba(0,0,0,0.25); }
-      60%  { box-shadow: 0 0 0 18px rgba(0,228,124, 0),   0 8px 32px rgba(0,0,0,0.25); }
-      100% { box-shadow: 0 0 0 0   rgba(0,228,124, 0),   0 8px 32px rgba(0,0,0,0.25); }
+    /* ─── PROBLEM ─── */
+    .section-problem { padding: 104px 0; background: var(--text); color: var(--white); }
+    .problem-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: start;
     }
+    .problem-label { color: rgba(255,255,255,0.35); }
+    .problem-label::before { background: rgba(255,255,255,0.25); }
+    .problem-h {
+      font-family: var(--font-display);
+      font-size: clamp(1.625rem, 2.5vw, 2.25rem);
+      font-weight: 600; line-height: 1.22;
+      letter-spacing: -0.025em; margin-bottom: 20px;
+    }
+    .problem-p { font-size: 0.9375rem; line-height: 1.8; color: rgba(255,255,255,0.6); }
+    .problem-p p + p { margin-top: 14px; }
+    .problem-closer {
+      grid-column: 1 / -1; margin-top: 16px;
+      padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08);
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 700; letter-spacing: -0.03em;
+    }
+    .problem-closer em { font-style: italic; color: var(--accent-mid); font-weight: 400; }
 
-    /* Icon swap */
-    #certin-voice-btn .icon-mic  { display: block; }
-    #certin-voice-btn .icon-stop { display: none; }
-    #certin-voice-btn.active .icon-mic  { display: none; }
-    #certin-voice-btn.active .icon-stop { display: block; }
+    /* ─── HOW IT WORKS ─── */
+    .section-how { padding: 104px 0; }
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-header .section-label { justify-content: center; }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      font-weight: 700; letter-spacing: -0.03em; line-height: 1.12;
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--text-muted);
+      margin-top: 12px; line-height: 1.7;
+      max-width: 460px; margin-left: auto; margin-right: auto;
+    }
+    .steps {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .step {
+      background: var(--white); padding: 36px 28px;
+      transition: background 0.2s;
+    }
+    .step:hover { background: var(--accent-light); }
+    .step-n {
+      font-family: var(--font-display);
+      font-size: 2.75rem; font-weight: 800;
+      color: var(--border); letter-spacing: -0.05em;
+      line-height: 1; margin-bottom: 20px;
+    }
+    .step-name { font-weight: 600; font-size: 1rem; margin-bottom: 10px; }
+    .step-desc { font-size: 0.875rem; line-height: 1.7; color: var(--text-muted); }
 
-    /* Cara label tooltip */
-    #certin-voice-btn::after {
-      content: "Talk to Cara";
-      position: absolute;
-      right: calc(100% + 12px);
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--certin-dark);
-      color: var(--certin-white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 6px 10px;
-      border-radius: 6px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
+    /* ─── DEMO / TRANSCRIPT ─── */
+    .section-demo { padding: 104px 0; background: var(--bg-section); }
+    .demo-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 72px; align-items: center; }
+    .demo-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 700; letter-spacing: -0.025em;
+      line-height: 1.18; margin-bottom: 16px;
     }
-    #certin-voice-btn:hover::after { opacity: 1; }
+    .demo-sub {
+      font-size: 0.9375rem; line-height: 1.75;
+      color: var(--text-muted); max-width: 360px;
+    }
+    .demo-tags { display: flex; gap: 8px; margin-top: 28px; flex-wrap: wrap; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--white); border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 500; color: var(--text-muted);
+    }
+    .tag.live { border-color: var(--accent-light); color: var(--accent); background: var(--accent-light); }
+    .tag.live::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); animation: blink 1.8s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
-    /* ─────────────────────────────────────────────────────────
-       STATUS PILL — shown when session active
-    ───────────────────────────────────────────────────────── */
-    #certin-status {
-      position: fixed;
-      bottom: 108px;
-      right: 32px;
-      z-index: 9999;
-      background: var(--certin-dark);
-      color: var(--certin-white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 6px 14px;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      pointer-events: none;
+    /* Transcript Card */
+    .transcript {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.07);
     }
-    #certin-status.visible {
-      opacity: 1;
-      transform: translateY(0);
+    .t-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
     }
-    #certin-status .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--certin-green);
-      animation: dot-blink 1.4s ease-in-out infinite;
+    .t-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 0.875rem; color: white;
     }
-    @keyframes dot-blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
+    .t-name { font-weight: 600; font-size: 0.875rem; line-height: 1.2; }
+    .t-sub { font-size: 0.75rem; color: var(--text-muted); }
+    .t-messages { padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 270px; }
+    .msg { display: flex; gap: 8px; align-items: flex-end; }
+    .msg.user { flex-direction: row-reverse; }
+    .msg-pip {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--bg-section); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.625rem; font-weight: 700; color: var(--text-muted);
     }
+    .msg.user .msg-pip { background: var(--accent-light); color: var(--accent); }
+    .msg-bub {
+      max-width: 76%; padding: 10px 14px;
+      border-radius: 14px; font-size: 0.875rem; line-height: 1.6;
+    }
+    .msg.agent .msg-bub {
+      background: var(--bg-section); color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+    .msg.user .msg-bub {
+      background: var(--accent); color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-hidden { opacity: 0; transform: translateY(6px); transition: opacity 0.4s ease, transform 0.4s ease; }
+    .msg-visible { opacity: 1; transform: translateY(0); }
+    .t-footer {
+      padding: 12px 16px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .t-input {
+      flex: 1; background: var(--bg-section); border: none; outline: none;
+      padding: 8px 13px; border-radius: var(--radius);
+      font-size: 0.8125rem; color: var(--text-muted); font-family: var(--font-body);
+    }
+    .t-mic {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent); border: none; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .t-mic svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    /* ─────────────────────────────────────────────────────────
-       GDPR CONSENT MODAL
-    ───────────────────────────────────────────────────────── */
-    #certin-modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      align-items: flex-end;
-      justify-content: flex-end;
-      padding: 32px;
+    /* ─── FEATURES ─── */
+    .section-features { padding: 104px 0; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
     }
-    #certin-modal-overlay.open {
-      display: flex;
-    }
-
-    #certin-modal {
-      background: var(--certin-dark);
-      color: var(--certin-white);
-      border-radius: 16px;
-      padding: 28px 28px 24px;
-      max-width: 340px;
-      width: 100%;
-      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
-      animation: modal-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    @keyframes modal-in {
-      from { opacity: 0; transform: scale(0.92) translateY(12px); }
-      to   { opacity: 1; transform: scale(1)    translateY(0); }
-    }
-
-    .certin-modal-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .certin-modal-header .cara-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--certin-green);
-      flex-shrink: 0;
-    }
-    .certin-modal-header h3 {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    #certin-modal p {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      line-height: 1.65;
-      color: rgba(255,255,255,0.72);
+    .feature { background: var(--white); padding: 36px 32px; transition: background 0.2s; }
+    .feature:hover { background: var(--bg-section); }
+    .feature-icon {
+      width: 42px; height: 42px; background: var(--accent-light);
+      border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
       margin-bottom: 20px;
     }
-    #certin-modal p a {
-      color: var(--certin-green);
-      text-decoration: none;
+    .feature-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+    .feature-name { font-weight: 600; font-size: 0.9375rem; margin-bottom: 8px; }
+    .feature-desc { font-size: 0.875rem; line-height: 1.7; color: var(--text-muted); }
+
+    /* ─── PRICING ─── */
+    .section-pricing { padding: 104px 0; background: var(--bg-section); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .pricing-card {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); padding: 36px 30px; position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    #certin-modal p a:hover {
-      text-decoration: underline;
+    .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.08); }
+    .pricing-card.featured { border-color: var(--accent); box-shadow: 0 8px 32px rgba(11,79,58,0.1); }
+    .pricing-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: white;
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 100px;
+      white-space: nowrap;
+    }
+    .pricing-tier {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px;
+    }
+    .pricing-price {
+      font-family: var(--font-display);
+      font-size: 2.75rem; font-weight: 700;
+      letter-spacing: -0.04em; line-height: 1; margin-bottom: 4px;
+    }
+    .pricing-price sup { font-size: 1.25rem; font-weight: 500; }
+    .pricing-price span { font-size: 1rem; font-weight: 400; color: var(--text-muted); }
+    .pricing-setup { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 24px; }
+    .pricing-hr { height: 1px; background: var(--border); margin-bottom: 22px; }
+    .pricing-list { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
+    .pricing-list li {
+      display: flex; align-items: flex-start; gap: 9px;
+      font-size: 0.875rem; line-height: 1.5;
+    }
+    .pricing-list li::before {
+      content: '';
+      width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
+      border-radius: 50%; background-color: var(--accent-light);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6' stroke='%230B4F3A' stroke-width='1.75' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+    .pricing-list li.off { color: var(--text-muted); }
+    .pricing-list li.off::before {
+      background-color: var(--bg-section);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 8h6' stroke='%23B5B0AA' stroke-width='1.75' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+    .pricing-note { text-align: center; margin-top: 36px; font-size: 0.875rem; color: var(--text-muted); }
+    .pricing-note a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* ─── TESTIMONIAL ─── */
+    .section-testimonial { padding: 104px 0; }
+    .testimonial-inner { max-width: 780px; margin: 0 auto; text-align: center; }
+    .t-quote {
+      font-family: var(--font-display);
+      font-size: clamp(1.375rem, 2.5vw, 1.875rem);
+      font-weight: 500; line-height: 1.45;
+      letter-spacing: -0.02em; margin-bottom: 36px;
+      color: var(--text);
+    }
+    .t-attribution { display: flex; align-items: center; justify-content: center; gap: 14px; }
+    .t-source {
+      background: var(--bg-section); border: 1px solid var(--border);
+      padding: 5px 14px; border-radius: var(--radius);
+      font-size: 0.875rem; font-weight: 600; font-family: var(--font-display);
+    }
+    .t-who { font-size: 0.875rem; color: var(--text-muted); }
+
+    /* ─── FINAL CTA ─── */
+    .section-final { padding: 128px 0; background: var(--text); color: var(--white); }
+    .final-inner { text-align: center; }
+    .final-headline {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 4.25rem);
+      font-weight: 700; letter-spacing: -0.035em;
+      line-height: 1.06; margin-bottom: 18px;
+    }
+    .final-headline em { font-style: italic; color: var(--accent-mid); font-weight: 400; }
+    .final-sub { font-size: 1rem; color: rgba(255,255,255,0.5); margin-bottom: 48px; }
+    .final-actions { display: flex; align-items: center; justify-content: center; gap: 20px; }
+    .btn-inv {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--white); color: var(--text);
+      padding: 13px 28px; border-radius: var(--radius);
+      font-size: 0.9375rem; font-weight: 500; font-family: var(--font-body);
+      transition: background 0.2s, transform 0.15s; border: none; cursor: pointer;
+    }
+    .btn-inv:hover { background: var(--accent-light); transform: translateY(-2px); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: rgba(255,255,255,0.5); font-size: 0.9375rem;
+      transition: color 0.2s, gap 0.2s;
+    }
+    .btn-ghost:hover { color: rgba(255,255,255,0.9); gap: 10px; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--text); border-top: 1px solid rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.5); padding: 64px 0 40px;
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 48px; margin-bottom: 48px;
+    }
+    .footer-brand {
+      font-family: var(--font-display);
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--white); letter-spacing: -0.02em; margin-bottom: 10px;
+    }
+    .footer-brand span { color: var(--accent-mid); }
+    .footer-tagline { font-size: 0.8125rem; line-height: 1.7; }
+    .footer-col h4 {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 16px;
+    }
+    .footer-col a {
+      display: block; font-size: 0.875rem; color: rgba(255,255,255,0.5);
+      margin-bottom: 10px; transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--white); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.07); padding-top: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.8125rem;
     }
 
-    .certin-modal-actions {
-      display: flex;
-      gap: 10px;
+    /* ─── Cookie Banner ─── */
+    .cookie-banner {
+      position: fixed; bottom: 24px; left: 24px; z-index: 998;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 22px 24px; max-width: 368px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      animation: slideup 0.4s ease;
     }
-    .certin-btn-primary {
-      flex: 1;
-      padding: 11px 16px;
-      background: var(--certin-green);
-      color: var(--certin-dark);
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s ease, transform 0.15s ease;
+    @keyframes slideup { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .ck-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 8px; }
+    .ck-text { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 16px; }
+    .ck-actions { display: flex; gap: 8px; }
+    .ck-accept {
+      flex: 1; background: var(--text); color: white; border: none;
+      padding: 9px; border-radius: var(--radius);
+      font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+      font-family: var(--font-body); transition: background 0.2s;
     }
-    .certin-btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
+    .ck-accept:hover { background: var(--accent); }
+    .ck-decline {
+      background: none; border: 1.5px solid var(--border);
+      padding: 9px 16px; border-radius: var(--radius);
+      font-size: 0.8125rem; cursor: pointer; color: var(--text-muted);
+      font-family: var(--font-body); transition: border-color 0.2s;
     }
-    .certin-btn-secondary {
-      padding: 11px 16px;
-      background: transparent;
-      color: rgba(255,255,255,0.55);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: color 0.15s ease, border-color 0.15s ease;
-    }
-    .certin-btn-secondary:hover {
-      color: rgba(255,255,255,0.85);
-      border-color: rgba(255,255,255,0.3);
-    }
+    .ck-decline:hover { border-color: var(--text-muted); }
 
-    /* ─────────────────────────────────────────────────────────
-       FALLBACK BANNER — shown if ElevenLabs unavailable
-    ───────────────────────────────────────────────────────── */
-    #certin-fallback {
-      display: none;
-      position: fixed;
-      bottom: 108px;
-      right: 32px;
-      z-index: 9999;
-      background: var(--certin-dark);
-      color: rgba(255,255,255,0.85);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      max-width: 230px;
-      line-height: 1.5;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    /* ─── Site-level Voice Widget ─── */
+    .site-widget {
+      position: fixed; bottom: 28px; right: 28px; z-index: 499;
     }
-    #certin-fallback a {
-      color: var(--certin-green);
-      text-decoration: none;
+    .sw-btn {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--accent); border: none; cursor: pointer; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(11,79,58,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+    .sw-btn:hover { transform: scale(1.08); box-shadow: 0 6px 30px rgba(11,79,58,0.5); }
+    .sw-btn svg { position: relative; z-index: 1; width: 24px; height: 24px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .sw-ring {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: var(--accent); opacity: 0;
+      animation: vwpulse 2.8s ease-out infinite;
+    }
+    .sw-ring:nth-child(2) { animation-delay: 0.9s; }
+    .sw-tip {
+      position: absolute; right: 70px; top: 50%; transform: translateY(-50%);
+      background: var(--text); color: white;
+      padding: 7px 13px; border-radius: var(--radius);
+      font-size: 0.8125rem; white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .sw-tip::after {
+      content: ''; position: absolute; left: 100%; top: 50%;
+      transform: translateY(-50%);
+      border: 5px solid transparent; border-left-color: var(--text);
+    }
+    .sw-btn:hover ~ .sw-tip { opacity: 1; }
 
-    /* ─── Responsive ────────────────────────────────────────── */
-    @media (max-width: 480px) {
-      #certin-modal-overlay { padding: 16px; align-items: flex-end; }
-      #certin-modal { max-width: 100%; border-radius: 16px 16px 12px 12px; }
-      #certin-voice-btn { bottom: 20px; right: 20px; }
-      #certin-status { bottom: 96px; right: 20px; }
-      #certin-fallback { right: 20px; }
+    /* ─── Scroll Reveal ─── */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 960px) {
+      .hero-inner, .problem-grid, .demo-grid { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .problem-closer { grid-column: 1; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 0 20px; }
+      .steps { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+      .final-actions { flex-direction: column; align-items: center; }
+      .footer-grid { grid-template-columns: 1fr; }
     }
   </style>
-
-  <!-- Google Font: DM Sans -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- ──────────────────────────────────────────
-       DEMO SCAFFOLD — remove in production
-  ─────────────────────────────────────────── -->
-  <p class="demo-label">certin-voice-widget.html — plain HTML version<br/>
-    <small style="font-size:11px;opacity:0.5">Drop the widget code block into any site's &lt;/body&gt;</small>
-  </p>
+<!-- ════════════ NAV ════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">Proxy<span>.</span></a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#demo">Demo</a>
+      <a href="#pricing">Pricing</a>
+      <a href="https://cal.com/idoko-agbo-fjfhjw/30min" target="_blank" class="nav-cta">Book a demo</a>
+    </div>
+  </div>
+</nav>
 
-  <!-- ══════════════════════════════════════════
-       ▼▼▼  PASTE THIS INTO YOUR SITE  ▼▼▼
-  ══════════════════════════════════════════ -->
-
-  <!-- GDPR CONSENT MODAL -->
-  <div id="certin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="certin-modal-title">
-    <div id="certin-modal">
-      <div class="certin-modal-header">
-        <span class="cara-dot"></span>
-        <h3 id="certin-modal-title">Before we start</h3>
+<!-- ════════════ HERO ════════════ -->
+<section class="hero" id="top">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <h1 class="hero-headline">
+          Your brand's<br><em>voice.</em> On every<br>website. Always on.
+        </h1>
+        <p class="hero-sub">
+          Proxy deploys a conversational AI agent on your website — trained on your product, speaking your language, converting visitors 24/7.
+        </p>
+        <div class="hero-actions">
+          <a href="https://cal.com/idoko-agbo-fjfhjw/30min" target="_blank" class="btn-primary">Book a Demo →</a>
+          <a href="#how-it-works" class="btn-ghost-link">See how it works →</a>
+        </div>
+        <div class="hero-proof">
+          <div class="proof-pips">
+            <div class="proof-pip on"></div>
+            <div class="proof-pip on"></div>
+            <div class="proof-pip on"></div>
+            <div class="proof-pip"></div>
+            <div class="proof-pip"></div>
+          </div>
+          Trusted by B2B teams in logistics, SaaS, and professional services.
+        </div>
       </div>
-      <p>
-        Hi! I'm <strong>Cara</strong> from Certin. Before we chat, a quick note:<br /><br />
-        This voice session is <strong>not recorded or stored</strong> beyond our conversation.
-        By continuing you agree to Certin's
-        <a href="https://getcertin.ai/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
-      </p>
-      <div class="certin-modal-actions">
-        <button class="certin-btn-primary" id="certin-consent-yes" onclick="certin.acceptConsent()">
-          Start talking
-        </button>
-        <button class="certin-btn-secondary" id="certin-consent-no" onclick="certin.declineConsent()">
-          Not now
-        </button>
+      <div class="hero-visual">
+        <div class="browser">
+          <div class="browser-bar">
+            <div class="b-dots">
+              <div class="b-dot"></div>
+              <div class="b-dot"></div>
+              <div class="b-dot"></div>
+            </div>
+            <div class="b-url">getcertin.ai</div>
+          </div>
+          <div class="browser-body">
+            <div class="sk sk-h sk-w50"></div>
+            <div class="sk sk-l sk-w90"></div>
+            <div class="sk sk-l sk-w70"></div>
+            <div class="sk sk-l sk-w90"></div>
+            <div class="sk sk-l sk-w50"></div>
+            <div class="sk sk-l sk-w70"></div>
+            <div class="sk sk-l sk-w35"></div>
+            <div class="sk-btns">
+              <div class="sk-btn" style="width:96px"></div>
+              <div class="sk-btn alt" style="width:80px"></div>
+            </div>
+            <!-- Pulsing voice widget -->
+            <div class="voice-widget">
+              <div class="vw-pulse"></div>
+              <div class="vw-pulse"></div>
+              <div class="vw-btn">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- STATUS PILL -->
-  <div id="certin-status" aria-live="polite">
-    <span class="dot"></span>
-    <span id="certin-status-text">Cara is listening…</span>
+<!-- ════════════ PROBLEM ════════════ -->
+<section class="section-problem">
+  <div class="container">
+    <div class="problem-grid">
+      <div>
+        <div class="section-label problem-label">The problem</div>
+        <h2 class="problem-h">Your website has thousands of visitors. Most leave without ever asking a question.</h2>
+        <div class="problem-p">
+          <p>Not because they're not interested. Because there's no one there to answer.</p>
+          <p>The contact form asks them to wait. The chatbot gives them a menu. The demo request takes three business days.</p>
+        </div>
+      </div>
+      <div>
+        <div class="section-label problem-label">The cost</div>
+        <h2 class="problem-h">Every unanswered question is a lead that didn't convert.</h2>
+        <div class="problem-p">
+          <p>A deal that went to a competitor who picked up the phone.</p>
+          <p>A founder who wanted to say yes, but couldn't get a fast enough answer to justify the risk.</p>
+          <p>You can't hire someone to be on your website 24/7. But Proxy can be.</p>
+        </div>
+      </div>
+      <div class="problem-closer">Proxy fixes <em>the silence.</em></div>
+    </div>
   </div>
+</section>
 
-  <!-- FALLBACK BANNER -->
-  <div id="certin-fallback">
-    Voice unavailable right now —
-    email us at <a href="mailto:info@getcertin.ai">info@getcertin.ai</a>
-    or visit <a href="https://getcertin.ai" target="_blank" rel="noopener">getcertin.ai</a>.
+<!-- ════════════ HOW IT WORKS ════════════ -->
+<section class="section-how reveal" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">From signed to live in days,<br>not months.</h2>
+      <p class="section-sub">We handle everything — setup, deployment, and ongoing management. Your team does nothing.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">01</div>
+        <div class="step-name">We build your agent</div>
+        <div class="step-desc">We configure a voice AI trained on your product, your tone, and your FAQs.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <div class="step-name">We deploy it</div>
+        <div class="step-desc">A floating voice button goes live on your website — one snippet, any stack.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <div class="step-name">It speaks for you</div>
+        <div class="step-desc">Visitors click, ask questions, get real answers — 24/7, in their language.</div>
+      </div>
+      <div class="step">
+        <div class="step-n">04</div>
+        <div class="step-name">We keep it sharp</div>
+        <div class="step-desc">Monthly tuning, knowledge base updates, and analytics — handled by us.</div>
+      </div>
+    </div>
   </div>
+</section>
 
-  <!-- FLOATING VOICE BUTTON -->
+<!-- ════════════ DEMO / TRANSCRIPT ════════════ -->
+<section class="section-demo reveal" id="demo">
+  <div class="container">
+    <div class="demo-grid">
+      <div>
+        <div class="section-label">The agent in action</div>
+        <h2 class="demo-title">A real conversation.<br>On a real website.</h2>
+        <p class="demo-sub">This is Cara — Proxy's first deployed agent, live on getcertin.ai. Bilingual, always available, trained on every detail of Certin's product.</p>
+        <div class="demo-tags">
+          <span class="tag live">Live on getcertin.ai</span>
+          <span class="tag">EN · FR</span>
+          <span class="tag">Powered by Proxy</span>
+        </div>
+      </div>
+      <div>
+        <div class="transcript">
+          <div class="t-header">
+            <div class="t-avatar">C</div>
+            <div>
+              <div class="t-name">Cara</div>
+              <div class="t-sub">Proxy Agent · getcertin.ai</div>
+            </div>
+          </div>
+          <div class="t-messages" id="tMessages">
+            <div class="msg agent msg-hidden" id="tm1">
+              <div class="msg-pip">C</div>
+              <div class="msg-bub">Hey! I'm Cara. I can answer any questions you have about Certin — in English or French. What would you like to know?</div>
+            </div>
+            <div class="msg user msg-hidden" id="tm2">
+              <div class="msg-pip">U</div>
+              <div class="msg-bub">What does Certin actually do?</div>
+            </div>
+            <div class="msg agent msg-hidden" id="tm3">
+              <div class="msg-pip">C</div>
+              <div class="msg-bub">Certin helps companies automate compliance workflows — making it faster to get certified and stay certified, without the manual overhead.</div>
+            </div>
+            <div class="msg user msg-hidden" id="tm4">
+              <div class="msg-pip">U</div>
+              <div class="msg-bub">How long does onboarding take?</div>
+            </div>
+            <div class="msg agent msg-hidden" id="tm5">
+              <div class="msg-pip">C</div>
+              <div class="msg-bub">Most teams are up and running within a week. Want me to book you a 20-minute call with the Certin team to walk through your setup?</div>
+            </div>
+          </div>
+          <div class="t-footer">
+            <input class="t-input" type="text" placeholder="Ask Cara anything..." readonly>
+            <button class="t-mic">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FEATURES ════════════ -->
+<section class="section-features reveal">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">What's included</div>
+      <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="feature-name">Voice agent setup</div>
+        <div class="feature-desc">Custom-built agent trained on your product copy, FAQs, and positioning — ready in days, not months.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="feature-name">Bilingual support</div>
+        <div class="feature-desc">Auto-detects visitor language. Responds in English, French, or both — seamlessly, mid-conversation.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="feature-name">Professional voice clone</div>
+        <div class="feature-desc">A cloned voice that sounds uniquely yours — not a stock AI voice. Available on the Pro plan.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="feature-name">Knowledge base management</div>
+        <div class="feature-desc">We keep the agent current as your product evolves. No manual work for your team, ever.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="feature-name">Monthly prompt tuning</div>
+        <div class="feature-desc">We refine the agent's responses based on real conversation patterns, every single month.</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-name">GDPR compliant</div>
+        <div class="feature-desc">Consent flow, privacy-first architecture, and EU data handling — built in from day one.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ PRICING ════════════ -->
+<section class="section-pricing reveal" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-title">Simple pricing.<br>No surprises.</h2>
+    </div>
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="pricing-card">
+        <div class="pricing-tier">Starter</div>
+        <div class="pricing-price"><sup>$</sup>299<span>/mo</span></div>
+        <div class="pricing-setup">+ $499 setup fee</div>
+        <div class="pricing-hr"></div>
+        <ul class="pricing-list">
+          <li>1 voice agent</li>
+          <li>1 language</li>
+          <li>300 minutes / month</li>
+          <li>Stock voice</li>
+          <li>KB updates quarterly</li>
+          <li>48hr support SLA</li>
+          <li>$0.08 / min overage</li>
+          <li class="off">Prompt tuning</li>
+          <li class="off">Professional voice clone</li>
+        </ul>
+        <a href="https://cal.com/idoko-agbo-fjfhjw/30min" class="btn-outline" target="_blank" style="width:100%">Get started</a>
+      </div>
+      <!-- Growth (featured) -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge">★ Most Popular</div>
+        <div class="pricing-tier">Growth</div>
+        <div class="pricing-price"><sup>$</sup>599<span>/mo</span></div>
+        <div class="pricing-setup">+ $799 setup fee</div>
+        <div class="pricing-hr"></div>
+        <ul class="pricing-list">
+          <li>Up to 3 agents</li>
+          <li>2 languages</li>
+          <li>750 minutes / month</li>
+          <li>Stock voice</li>
+          <li>KB updates monthly</li>
+          <li>24hr support SLA</li>
+          <li>$0.06 / min overage</li>
+          <li>1 prompt tuning session / mo</li>
+          <li class="off">Professional voice clone</li>
+        </ul>
+        <a href="https://cal.com/idoko-agbo-fjfhjw/30min" target="_blank" class="btn-primary" style="width:100%; justify-content:center">Get started</a>
+      </div>
+      <!-- Pro -->
+      <div class="pricing-card">
+        <div class="pricing-tier">Pro</div>
+        <div class="pricing-price"><sup>$</sup>999<span>/mo</span></div>
+        <div class="pricing-setup">+ $1,499 setup fee</div>
+        <div class="pricing-hr"></div>
+        <ul class="pricing-list">
+          <li>Up to 6 agents</li>
+          <li>Up to 4 languages</li>
+          <li>2,000 minutes / month</li>
+          <li>Professional voice clone</li>
+          <li>Unlimited KB updates</li>
+          <li>4hr support SLA</li>
+          <li>$0.04 / min overage</li>
+          <li>2 prompt tuning sessions / mo</li>
+        </ul>
+        <a href="https://cal.com/idoko-agbo-fjfhjw/30min" target="_blank" class="btn-outline" style="width:100%">Get started</a>
+      </div>
+    </div>
+    <p class="pricing-note">Not sure which plan is right? <a href="https://cal.com/idoko-agbo-fjfhjw/15min" target="_blank">Book a 15-minute call</a> — we'll tell you exactly what you need.</p>
+  </div>
+</section>
+
+<!-- ════════════ TESTIMONIAL ════════════ -->
+<section class="section-testimonial reveal">
+  <div class="container">
+    <div class="testimonial-inner">
+      <blockquote class="t-quote">
+        "We deployed Cara on getcertin.ai and visitors can now have a real conversation with our product — in English or French — without us being in the room. It's the first touchpoint that actually feels intelligent."
+      </blockquote>
+      <div class="t-attribution">
+        <div class="t-source">getcertin.ai</div>
+        <div class="t-who">Certin Team</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FINAL CTA ════════════ -->
+<section class="section-final">
+  <div class="container">
+    <div class="final-inner">
+      <h2 class="final-headline">Stop losing visitors<br>to <em>silence.</em></h2>
+      <p class="final-sub">Give your website a voice. Your first agent can be live within a week.</p>
+      <div class="final-actions">
+        <a href="https://cal.com/idoko-agbo-fjfhjw/30min" target="_blank" class="btn-inv">Book a Demo →</a>
+        <a href="#pricing" class="btn-ghost">View Pricing →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FOOTER ════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Proxy<span>.</span></div>
+        <div class="footer-tagline">Your brand's voice.<br>On every website. Always on.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#how-it-works">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#demo">Demo</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="/gdpr">GDPR</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="mailto:hello@proxy.ai">hello@proxy.ai</a>
+        <a href="https://cal.com/idoko-agbo-fjfhjw/30min" target="_blank">Book a call</a>
+        <a href="mailto:partners@proxy.ai">Partner with us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Proxy. All rights reserved.</span>
+      <span>Built for teams that close.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════════ FLOATING VOICE WIDGET (LP-007) ════════════ -->
+<!-- Replace data-agent-id with your ElevenLabs agent ID before going live -->
+<div class="site-widget">
   <button
-    id="certin-voice-btn"
-    aria-label="Talk to Cara — Certin voice assistant"
-    onclick="certin.onButtonClick()"
+    class="sw-btn"
+    data-agent-id="agent_6701km37q1c5ewjvjypzq5xz0fy3"
+    aria-label="Talk to Proxy"
   >
-    <!-- Mic icon -->
-    <svg class="icon-mic" width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="9" y="2" width="6" height="12" rx="3" fill="#00E47C"/>
-      <path d="M5 11a7 7 0 0 0 14 0" stroke="#00E47C" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="12" y1="18" x2="12" y2="22" stroke="#00E47C" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="9"  y1="22" x2="15" y2="22" stroke="#00E47C" stroke-width="1.8" stroke-linecap="round"/>
-    </svg>
-    <!-- Stop icon (shown when active) -->
-    <svg class="icon-stop" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="6" y="6" width="12" height="12" rx="2" fill="#ffffff"/>
+    <div class="sw-ring"></div>
+    <div class="sw-ring"></div>
+    <svg viewBox="0 0 24 24">
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
     </svg>
   </button>
+  <div class="sw-tip">Talk to Proxy</div>
+</div>
 
-  <!-- ──────────────────────────────────────────
-       CERTIN VOICE WIDGET — JavaScript
-  ─────────────────────────────────────────── -->
-  <script>
-    (function () {
-      // ─── CONFIG — set your Agent ID here ───────────────────
-      const AGENT_ID = 'agent_8401kk2gz0aje26rcf9p1msrg3vg'; // ← Replace with ElevenLabs Agent ID
+<!-- ════════════ COOKIE BANNER (LP-008) ════════════ -->
+<div class="cookie-banner" id="cookieBanner">
+  <div class="ck-title">We use cookies</div>
+  <div class="ck-text">We use essential cookies to keep this site working. With your consent, we'll also use analytics to understand how you use it.</div>
+  <div class="ck-actions">
+    <button class="ck-accept" onclick="dismissCookie('all')">Accept all</button>
+    <button class="ck-decline" onclick="dismissCookie('essential')">Essentials only</button>
+  </div>
+</div>
 
-      // ─── Inactivity timeout (ms) ────────────────────────────
-      const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+<script>
+  // ── Cookie consent ──
+  function dismissCookie(choice) {
+    document.getElementById('cookieBanner').style.display = 'none';
+    try { localStorage.setItem('proxy_cookie', choice); } catch(e){}
+  }
+  try {
+    if (localStorage.getItem('proxy_cookie')) {
+      document.getElementById('cookieBanner').style.display = 'none';
+    }
+  } catch(e){}
 
-      // ─── State ──────────────────────────────────────────────
-      let activeSession      = null;
-      let inactivityTimer    = null;
-      let consentGranted     = false;
-      const btn              = document.getElementById('certin-voice-btn');
-      const overlay          = document.getElementById('certin-modal-overlay');
-      const statusEl         = document.getElementById('certin-status');
-      const statusText       = document.getElementById('certin-status-text');
-      const fallbackEl       = document.getElementById('certin-fallback');
+  // ── Scroll reveal ──
+  const revEls = document.querySelectorAll('.reveal');
+  const revObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); revObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.08 });
+  revEls.forEach(el => revObs.observe(el));
 
-      // ─── Public API on window.certin ────────────────────────
-      window.certin = {
+  // ── Transcript auto-play on scroll into view ──
+  const tIds    = ['tm1','tm2','tm3','tm4','tm5'];
+  const tDelays = [500, 1900, 3100, 4800, 6200];
+  let tStarted  = false;
 
-        onButtonClick() {
-          if (activeSession) {
-            certin.endSession();
-            return;
-          }
-          if (consentGranted) {
-            certin.startSession();
-          } else {
-            overlay.classList.add('open');
-          }
-        },
-
-        acceptConsent() {
-          consentGranted = true;
-          overlay.classList.remove('open');
-          certin.startSession();
-        },
-
-        declineConsent() {
-          overlay.classList.remove('open');
-        },
-
-        async startSession() {
-          // Wait for SDK if still loading
-          if (!window.ElevenLabs) {
-            if (window.__elevenLabsReady) {
-              console.warn('Certin: ElevenLabs SDK not found after load.');
-              certin.showFallback();
-              return;
-            }
-            // Poll for up to 3s
-            let attempts = 0;
-            const poll = setInterval(() => {
-              attempts++;
-              if (window.ElevenLabs) {
-                clearInterval(poll);
-                certin._doStart();
-              } else if (attempts > 15) {
-                clearInterval(poll);
-                certin.showFallback();
-              }
-            }, 200);
-            return;
-          }
-          certin._doStart();
-        },
-
-        async _doStart() {
-          try {
-            activeSession = await window.ElevenLabs.Conversation.startSession({
-              agentId: AGENT_ID,
-
-              onConnect: () => {
-                btn.classList.add('active');
-                statusEl.classList.add('visible');
-                certin.resetInactivityTimer();
-              },
-
-              onDisconnect: () => {
-                certin.clearSessionState();
-              },
-
-              onAgentResponse: () => {
-                statusText.textContent = 'Cara is speaking…';
-                certin.resetInactivityTimer();
-              },
-
-              onUserTranscript: () => {
-                statusText.textContent = 'Cara is listening…';
-                certin.resetInactivityTimer();
-              },
-
-              onError: (err) => {
-                console.error('Certin voice error:', err);
-                certin.clearSessionState();
-                certin.showFallback();
-              },
-            });
-          } catch (err) {
-            console.error('Certin: Failed to start session:', err);
-            certin.clearSessionState();
-            certin.showFallback();
-          }
-        },
-
-        async endSession() {
-          if (activeSession) {
-            try { await activeSession.endSession(); } catch (_) {}
-          }
-          certin.clearSessionState();
-        },
-
-        clearSessionState() {
-          activeSession = null;
-          btn.classList.remove('active');
-          statusEl.classList.remove('visible');
-          statusText.textContent = 'Cara is listening…';
-          clearTimeout(inactivityTimer);
-        },
-
-        resetInactivityTimer() {
-          clearTimeout(inactivityTimer);
-          inactivityTimer = setTimeout(() => {
-            if (activeSession) certin.endSession();
-          }, INACTIVITY_TIMEOUT_MS);
-        },
-
-        showFallback() {
-          fallbackEl.style.display = 'block';
-          setTimeout(() => { fallbackEl.style.display = 'none'; }, 8000);
-        },
-      };
-
-      // Close modal on overlay click
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) certin.declineConsent();
-      });
-
-      // Keyboard: Escape closes modal
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && overlay.classList.contains('open')) {
-          certin.declineConsent();
+  const demoEl = document.getElementById('demo');
+  if (demoEl) {
+    const demoObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !tStarted) {
+          tStarted = true;
+          tIds.forEach((id, i) => {
+            setTimeout(() => {
+              const el = document.getElementById(id);
+              if (el) el.classList.add('msg-visible');
+            }, tDelays[i]);
+          });
+          demoObs.unobserve(demoEl);
         }
       });
-    })();
-  </script>
-
-  <!-- ══════════════════════════════════════════
-       ▲▲▲  END OF WIDGET CODE BLOCK  ▲▲▲
-  ══════════════════════════════════════════ -->
-
+    }, { threshold: 0.25 });
+    demoObs.observe(demoEl);
+  }
+</script>
 </body>
 </html>
